@@ -5,6 +5,7 @@ import com.zhiyun.readwrite.entity.GoodsExample;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
 @Component
 public interface GoodsMapper {
     long countByExample(GoodsExample example);

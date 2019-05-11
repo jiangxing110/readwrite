@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 
 @Data
 @Builder
@@ -15,14 +16,14 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 //加入@ApiModel
 @ApiModel
-public class Goods {
-
-    @ApiModelProperty(value="ID",dataType="Integer",name="ID",example="1020332806740959233")
+public class Goods implements Serializable {
+    private static final long serialVersionUID = 1L;
+    @ApiModelProperty(value = "ID", dataType = "Integer", name = "ID", example = "1020332806740959233")
     private Integer id;
-    @ApiModelProperty(value="名称",dataType="String",name="name",example="小明")
+    @ApiModelProperty(value = "名称", dataType = "String", name = "name", example = "小明")
     @NotBlank(message = "编码不能为空")
     private String name;
-    @ApiModelProperty(value="stock",dataType="Integer",name="stock",example="001")
+    @ApiModelProperty(value = "stock", dataType = "Integer", name = "stock", example = "001")
     @NotBlank(message = "编码不能为空")
     private Integer stock;
 

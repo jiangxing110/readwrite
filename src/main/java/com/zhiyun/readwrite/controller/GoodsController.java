@@ -21,13 +21,13 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/Goods")
-@Api(tags="读写分离主从复制")
+@Api(tags = "读写分离主从复制")
 public class GoodsController {
     @Autowired
     private GoodsService goodsService;
 
     @GetMapping("/findAll")
-    @ApiOperation(value="查询全部--只读数据库")
+    @ApiOperation(value = "查询全部--只读数据库")
     public BaseResult<List<Goods>> findAll() {
         BaseResult<List<Goods>> baseResult = new BaseResult<List<Goods>>();
         baseResult.setData(goodsService.list());
@@ -35,15 +35,16 @@ public class GoodsController {
         baseResult.setResult(true);
         return baseResult;
     }
-    @ApiOperation(value="新增编辑接口--只写数据库")
+
+    @ApiOperation(value = "新增编辑接口--只写数据库")
     @RequestMapping(value = "Save", method = {RequestMethod.POST, RequestMethod.PUT})
     public BaseResult<Goods> Save(@RequestBody Goods goods) {
         BaseResult<Goods> baseResult = new BaseResult<Goods>();
         int i = goodsService.save(goods);
-        if (i==1){
+        if (i == 1) {
             baseResult.setData(goods);
             baseResult.setMessage("保存成功");
-        }else {
+        } else {
             baseResult.setData(null);
             baseResult.setMessage("保存失败");
         }

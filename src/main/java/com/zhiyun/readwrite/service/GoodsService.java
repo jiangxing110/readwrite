@@ -25,7 +25,7 @@ public class GoodsService {
         return goodseMapper.selectByExample(null);
     }
 
-    public int save(Goods goods){
+    public int save(Goods goods) {
         return goodseMapper.insert(goods);
     }
 }

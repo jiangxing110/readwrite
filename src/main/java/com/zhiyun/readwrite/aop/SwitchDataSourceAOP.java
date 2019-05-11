@@ -24,16 +24,16 @@ import org.springframework.stereotype.Component;
 public class SwitchDataSourceAOP {
     @Before("execution(* com.zhiyun.readwrite.service.*.*(..))")
     public void process(JoinPoint joinPoint) {
-        String methodName=joinPoint.getSignature().getName();
+        String methodName = joinPoint.getSignature().getName();
         if (methodName.startsWith("get")
-                ||methodName.startsWith("count")
-                ||methodName.startsWith("find")
-                ||methodName.startsWith("list")
-                ||methodName.startsWith("select")
-                ||methodName.startsWith("check")){
+                || methodName.startsWith("count")
+                || methodName.startsWith("find")
+                || methodName.startsWith("list")
+                || methodName.startsWith("select")
+                || methodName.startsWith("check")) {
             log.info("切换51数据库");
             DataSourceContextHolder.setDbType("selectDataSource");
-        }else {
+        } else {
             //切换dataSource
             log.info("切换42数据库");
             DataSourceContextHolder.setDbType("updateDataSource");

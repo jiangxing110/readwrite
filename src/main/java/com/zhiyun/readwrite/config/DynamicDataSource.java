@@ -34,7 +34,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
      */
     @Override
     protected Object determineCurrentLookupKey() {
-        System.out.println("DataSourceContextHolder：：："+DataSourceContextHolder.getDbType());
+        System.out.println("DataSourceContextHolder：：：" + DataSourceContextHolder.getDbType());
         return DataSourceContextHolder.getDbType();
     }
 
@@ -43,9 +43,9 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
      */
     @Override
     public void afterPropertiesSet() {
-        Map<Object,Object> map = new HashMap<>();
-        map.put("selectDataSource",selectDataSource);
-        map.put("updateDataSource",updateDataSource);
+        Map<Object, Object> map = new HashMap<>();
+        map.put("selectDataSource", selectDataSource);
+        map.put("updateDataSource", updateDataSource);
         setTargetDataSources(map);
         setDefaultTargetDataSource(updateDataSource);
         super.afterPropertiesSet();
