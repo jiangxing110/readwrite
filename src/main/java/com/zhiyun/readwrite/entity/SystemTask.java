@@ -21,35 +21,33 @@ public class SystemTask {
     /**
      * 开始节点id
      */
-    private Long startSiteId;
+    private String start;
     /**
      * 结束节点id
      */
-    private Long endSiteId;
+    private String end;
 
     /**
-     *任务类型
-     * */
+     * 任务类型
+     */
     private String taskType;
-    /**
-     *产品编码
-     * */
-    private String prodNo;
 
     /**
-     *请求时间
-     * */
+     * 请求时间
+     */
     @JsonFormat(timezone = "GMT+8", pattern = "yyyyMMddHHmmss")
-    private Date requestTime;
+    private Date startTime;
     /**
-     *是否完成
-     * */
+     * 是否完成
+     */
     private String isFinished;
     /**
-     *完成时间
-     * */
+     * 完成时间
+     */
     @JsonFormat(timezone = "GMT+8", pattern = "yyyyMMddHHmmss")
     private Date finishedTime;
-    //消息描述
+    /**
+     * 消息描述
+     */
     private String message;
 }
