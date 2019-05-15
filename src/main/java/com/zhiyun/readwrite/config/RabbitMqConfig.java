@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @Title: RabbitMqConfig
  * @ProjectName: readwrite
@@ -17,7 +20,27 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class RabbitMqConfig {
-
+    /**
+     * 备份交换机
+     * */
+    @Bean
+    public FanoutExchange unrouteExchange(){
+        return new FanoutExchange("unrouteExchange",true,false);
+    }
+    /**
+     * 创建备份交互器与备份交互器队列
+     */
+    @Bean
+    public Queue unrouteQueue(){
+        return new Queue("unrouteQueue",true);
+    }
+    /**
+     * 绑定备份交互器与备份队列,不需要指定key
+     * */
+    @Bean
+    Binding bindingUnRouteExchangeMessages() {
+        return BindingBuilder.bind(unrouteQueue()).to(unrouteExchange());
+    }
     /**
      * 配置交换机实例
      *
@@ -25,7 +48,9 @@ public class RabbitMqConfig {
      */
     @Bean
     public TopicExchange directExchange() {
-        return new TopicExchange(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME);
+        Map<String, Object> args = new HashMap<>();
+        args.put("alternate-exchange", "unrouteExchange");
+        return new TopicExchange(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME,true,false,args);
     }
 
     /**
@@ -35,6 +60,8 @@ public class RabbitMqConfig {
      */
     @Bean
     public Queue queue() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-message-ttl", "1000");
         return new Queue(Constants.DF_SYSTEM_TASK_QUEUE_NAME, true);
     }
     @Bean
