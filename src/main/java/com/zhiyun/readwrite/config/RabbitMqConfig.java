@@ -3,12 +3,9 @@ package com.zhiyun.readwrite.config;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.amqp.core.*;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @Title: RabbitMqConfig
@@ -17,8 +14,7 @@ import java.util.Map;
  * @author: jiangxing
  * @date 2019/5/1115:17
  */
-@Configuration
-@Slf4j
+
 public class RabbitMqConfig {
     /**
      * 备份交换机
@@ -48,9 +44,10 @@ public class RabbitMqConfig {
      */
     @Bean
     public TopicExchange directExchange() {
+        /*备份交换机
         Map<String, Object> args = new HashMap<>();
-        args.put("alternate-exchange", "unrouteExchange");
-        return new TopicExchange(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME,true,false,args);
+        args.put("alternate-exchange", "unrouteExchange");*/
+        return new TopicExchange(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME,true,false);
     }
 
     /**
@@ -60,10 +57,9 @@ public class RabbitMqConfig {
      */
     @Bean
     public Queue queue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-message-ttl", "1000");
         return new Queue(Constants.DF_SYSTEM_TASK_QUEUE_NAME, true);
     }
+
     @Bean
     public Queue queue1() {
         return new Queue(Constants.DF_SYSTEM_TASK_QUEUE_NAME1, true);
@@ -78,6 +74,7 @@ public class RabbitMqConfig {
         //链式写法: 用指定的路由键将队列绑定到交换机
         return BindingBuilder.bind(queue()).to(directExchange()).with(Constants.DF_SYSTEM_TASK_QUEUE_ROUTE_KEY);
     }
+
     @Bean
     public Binding binding1() {
         //链式写法: 用指定的路由键将队列绑定到交换机

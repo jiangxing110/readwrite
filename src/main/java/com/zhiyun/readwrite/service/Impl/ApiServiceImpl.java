@@ -22,8 +22,8 @@ import javax.annotation.Resource;
 @Service("ApiService")
 public class ApiServiceImpl implements ApiService {
 
-    @Autowired
-    private AmqpTemplate rabbitTemplate;
+    /*@Autowired
+    private AmqpTemplate rabbitTemplate;*/
     @Resource
     private RabbitTemplate rabbitTemplate1;
 
@@ -42,11 +42,16 @@ public class ApiServiceImpl implements ApiService {
             }
         });*/
         //rabbitTemplate.convertAndSend(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME,"com.df.qwqw",JSON.toJSONString(systemTask));
-        //
         /**
          * 配置备份交换机：如果路由键之前，消息路由到相应的队列里，失败就进入备份交换机绑定的队列
         * */
-        rabbitTemplate1.convertAndSend(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME,"com.1df.qwqwwwww",JSON.toJSONString(systemTask));
+
+        rabbitTemplate1.convertAndSend(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME,"com.df.qwqwwwww",JSON.toJSONString(systemTask)
+                /*message ->{
+                    // 如果配置了 params.put("x-message-ttl", 5 * 1000); 那么这一句也可以省略,具体根据业务需要是声明 Queue 的时候就指定好延迟时间还是在发送自己控制时间
+                    message.getMessageProperties().setExpiration(1 * 1000 * 60 + "");
+                    return message;
+                }*/ );
 
         return systemTask.toString();
     }

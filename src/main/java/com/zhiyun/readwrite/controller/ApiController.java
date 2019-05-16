@@ -43,7 +43,6 @@ public class ApiController {
         BaseResult<String> baseResult = new BaseResult<String>();
         try {
             systemTask.setStartTime(new Date());
-            Thread.sleep(5000);
             systemTask.setFinishedTime(new Date());
             String msg = apiService.sendMessage(systemTask);
             baseResult.setData(msg);
