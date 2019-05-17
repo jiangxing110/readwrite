@@ -109,6 +109,7 @@ public class RabbitCofig {
         args.put(DEAD_LETTER_ROUTING_KEY, KEY_R);
         //过期时间
         args.put("x-message-ttl", 2000);
+        args.put("x_max_priority",10);
         return QueueBuilder.durable(DL_QUEUE).autoDelete().withArguments(args).build();
     }
 
