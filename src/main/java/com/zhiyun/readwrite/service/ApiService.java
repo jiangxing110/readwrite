@@ -17,5 +17,5 @@ public interface ApiService  {
      * @Author: jiangxing
      * @Date: 2019/5/13 14:43
      */
-    String sendMessage(SystemTask systemTask);
+    String sendMessage(SystemTask systemTask) throws Exception;
 }

@@ -1,10 +1,13 @@
 package com.zhiyun.readwrite.utils;
 
 import com.rabbitmq.client.*;
+import lombok.extern.slf4j.Slf4j;
 import sun.awt.CustomCursor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -15,7 +18,7 @@ import java.util.concurrent.TimeoutException;
  * @author: jiangxing
  * @date 2019/5/1411:19
  */
-
+@Slf4j
 public class RabbitConsumer {
     private static final String EXCHANGE_NAME = "exchange_demo";
     private static final String ROUTING_KEY = "routingkey_demo";
@@ -48,4 +51,47 @@ public class RabbitConsumer {
         channel.close();
         connection.close();
     }*/
+    public static void main(String[] args) throws Exception {
+
+        ConnectionFactory factory = new ConnectionFactory();
+        //ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("127.0.0.1");
+        factory.setPort(5672);
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        // DLX
+        channel.exchangeDeclare("exchange.dlx", "direct", true);
+        channel.exchangeDeclare("exchange.normal", "fanout", true);
+
+        Map<String, Object> arg = new HashMap<String, Object>();
+        // 设置DLX
+        arg.put("x-dead-letter-exchange", "exchange.dlx");
+        arg.put("x-dead-letter-routing-key", "routingkey.dlx");
+        // 设置消息过期时间，消息过期后，会重新发布到DLX
+        arg.put("x-message-ttl", 5000);
+        channel.queueDeclare("queue.normal", true, false, false, null);
+        //	死信队列
+        channel.queueDeclare("queue.dlx", true, false, false, arg);
+
+        channel.queueBind("queue.normal", "exchange.dlx", "aaac");
+        channel.queueBind("queue.dlx", "exchange.dlx", "routingkey.dlx");
+
+        AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
+        builder.deliveryMode(2); //持久化消息
+        builder.expiration("30000");// 设置 TTL=60000ms
+        AMQP.BasicProperties properties = builder.build();
+
+        channel.basicPublish("exchange.dlx", "routingkey.dlx", false, properties,
+                "Message-5s".getBytes());
+
+        log.error("消息发送成功");
+        channel.close();
+        connection.close();
+
+
+    }
 }

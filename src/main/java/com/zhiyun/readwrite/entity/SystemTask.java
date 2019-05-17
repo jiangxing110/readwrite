@@ -17,7 +17,7 @@ public class SystemTask {
     /**
      * 搬运任务唯一的表示id
      */
-    private Long id;
+    private Integer id;
     /**
      * 开始节点id
      */

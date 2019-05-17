@@ -1,5 +1,6 @@
 package com.zhiyun.readwrite.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
@@ -8,6 +9,7 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -20,7 +22,7 @@ import java.util.Map;
  * @version v1.0
  * @since 2018 /2/23 14:28
  */
-@Configuration
+
 public class RabbitMqTTlConfig {
     /**
      * 死信队列 交换机标识符
@@ -43,20 +45,20 @@ public class RabbitMqTTlConfig {
      *
      * @return the amqp template
      */
-//    @Primary
+    @Primary
     @Bean
     public AmqpTemplate amqpTemplate() {
         Logger log = LoggerFactory.getLogger(RabbitTemplate.class);
-//          使用jackson 消息转换器
+        // 使用jackson 消息转换器
         rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
         rabbitTemplate.setEncoding("UTF-8");
-//        开启returncallback     yml 需要 配置    publisher-returns: true
+        //开启returncallback  yml 需要 配置publisher-returns: true
         rabbitTemplate.setMandatory(true);
         rabbitTemplate.setReturnCallback((message, replyCode, replyText, exchange, routingKey) -> {
             String correlationId = message.getMessageProperties().getCorrelationId();
             log.debug("消息：{} 发送失败, 应答码：{} 原因：{} 交换机: {}  路由键: {}", correlationId, replyCode, replyText, exchange, routingKey);
         });
-        //        消息确认  yml 需要配置   publisher-returns: true
+        // 消息确认  yml 需要配置   publisher-returns: true
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
             if (ack) {
                 log.debug("消息发送到exchange成功,id: {}", correlationData.getId());
@@ -179,9 +181,9 @@ public class RabbitMqTTlConfig {
     @Bean("deadLetterQueue")
     public Queue deadLetterQueue() {
         Map<String, Object> args = new HashMap<>(2);
-//       x-dead-letter-exchange    声明  死信交换机
+        //x-dead-letter-exchange    声明  死信交换机
         args.put(DEAD_LETTER_QUEUE_KEY, "DL_EXCHANGE");
-//       x-dead-letter-routing-key    声明 死信路由键
+        //x-dead-letter-routing-key    声明 死信路由键
         args.put(DEAD_LETTER_ROUTING_KEY, "KEY_R");
         return QueueBuilder.durable("DL_QUEUE").withArguments(args).build();
     }

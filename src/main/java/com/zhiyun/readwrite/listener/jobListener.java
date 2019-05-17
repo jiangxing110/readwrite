@@ -1,16 +1,13 @@
 package com.zhiyun.readwrite.listener;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-
 /**
  * @Title: jobListener
  * @ProjectName: readwrite
@@ -22,19 +19,19 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class jobListener implements ChannelAwareMessageListener {
 
-
     @Override
-    //@RabbitListener(queues = "SystemTask10")
+    @RabbitListener(queues = "REDIRECT_QUEUE")
     public void onMessage(Message message, Channel channel) throws Exception {
         String messageContent = new String(message.getBody(), StandardCharsets.UTF_8);
         try {
             log.info("messageContent: " + messageContent);
+
             //channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
            /* 其中 deliveryTag 可以看作消息的编号 ，它是 一个 64 位的长整型值，最大值是
             9223372036854775807 。如果 requeue 参数设置为 true ，则 RabbitMQ 会重新将这条消息存入
             队列，以便可以发送给下 个订阅的消费者;如果 requeue 参数设置为 false ，则 RabbitMQ
             立即会把消息从队列中移除，而不会把它发送给新的消费者。*/
-            channel.basicReject(message.getMessageProperties().getDeliveryTag(), true);
+            //channel.basicReject(message.getMessageProperties().getDeliveryTag(), true);
             //channel.basicNack(message.getMessageProperties().getDeliveryTag(),false,true);
         }catch (Exception e) {
             e.printStackTrace();
