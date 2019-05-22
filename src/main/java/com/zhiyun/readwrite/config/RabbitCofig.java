@@ -18,8 +18,7 @@ import java.util.Map;
  * @date 2019/5/1711:20
  */
 
-@Slf4j
-@Configuration
+
 public class RabbitCofig {
 
     public static final String ExCHANGE_ONE = "com.zhiyun.wcs.one";
@@ -59,9 +58,8 @@ public class RabbitCofig {
     @Bean("queueOne")
     public Queue queueOne() {
         Map<String, Object> args = new HashMap<String, Object>();
-        //x-dead-letter-exchange    声明  死信交换机
-        args.put("x-message-ttl", 6000);
-        return QueueBuilder.durable(QUEUE_ONE).autoDelete().withArguments(args).build();
+        args.put("x-max-priority", 10);
+        return QueueBuilder.durable(QUEUE_ONE).withArguments(args).build();
     }
 
     @Bean("queueTwo")
@@ -71,7 +69,9 @@ public class RabbitCofig {
 
     @Bean
     public Binding topicBindingOne(@Qualifier("queueOne") Queue queue, @Qualifier("topExchange") Exchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(DF_SYSTEM_TASK_QUEUE_ROUTE_KEY).noargs();
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("x-max-priority", 10);
+        return BindingBuilder.bind(queue).to(exchange).with(DF_SYSTEM_TASK_QUEUE_ROUTE_KEY).and(args);
     }
 
     @Bean
@@ -109,7 +109,7 @@ public class RabbitCofig {
         args.put(DEAD_LETTER_ROUTING_KEY, KEY_R);
         //过期时间
         args.put("x-message-ttl", 2000);
-        args.put("x_max_priority",10);
+        args.put("x-max-priority",10);
         return QueueBuilder.durable(DL_QUEUE).autoDelete().withArguments(args).build();
     }
 
@@ -146,7 +146,7 @@ public class RabbitCofig {
         return BindingBuilder.bind(queue).to(exchange).with(KEY_R).noargs();
     }
 
-    /* ------------------------------------------------- 延迟队列--------------------------------------------------------------------*/
+    /* --------------------------------------------------- 延迟队列--------------------------------------------------------------------*/
 /**
  * 延时队列顾名思义，即放置在该队列里面的消息是不需要立即消费的，而是等待一段时间之后取出消费。
  *     那么，为什么需要延迟消费呢？我们来看以下的场景

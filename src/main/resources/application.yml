@@ -25,8 +25,13 @@ spring:
     port: 5672
     username: guest
     password: guest
-    publisher-confirms: true
-    publisher-returns: true
+    publisher-confirms: false
+    publisher-returns: false
+    listener:
+      simple:
+        acknowledge-mode: manual
+      direct:
+        acknowledge-mode: manual
 
 mybatis:
   mapperLocations: classpath:mapper/*.xml

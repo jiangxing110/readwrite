@@ -6,6 +6,9 @@ import org.springframework.amqp.core.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * @Title: RabbitMqConfig
@@ -14,7 +17,8 @@ import org.springframework.context.annotation.Configuration;
  * @author: jiangxing
  * @date 2019/5/1115:17
  */
-
+@Slf4j
+@Configuration
 public class RabbitMqConfig {
     /**
      * 备份交换机
@@ -57,7 +61,9 @@ public class RabbitMqConfig {
      */
     @Bean
     public Queue queue() {
-        return new Queue(Constants.DF_SYSTEM_TASK_QUEUE_NAME, true);
+        Map<String,Object>map=new HashMap<String, Object>();
+        map.put("x-max-priority", 10);
+        return new Queue(Constants.DF_SYSTEM_TASK_QUEUE_NAME, true,false,false,map);
     }
 
     @Bean
