@@ -75,8 +75,8 @@ public class ApiServiceImpl implements ApiService {
         for (int i = 0; i < 10; i++) {
 
             systemTask.setId(i);
-            if (i%2==0) {
-                rabbitTemplate1.convertAndSend(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME, "com.df.qwqwwwww", new Message(JSON.toJSONString(systemTask).getBytes(), getmessageProperties(4)));
+            if (i==1||i==3||i==7) {
+                rabbitTemplate1.convertAndSend(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME, "com.df.qwqwwwww", new Message(JSON.toJSONString(systemTask).getBytes(), getmessageProperties(5)));
             }else {
                 rabbitTemplate1.convertAndSend(Constants.DF_SYSTEM_TASK_EXCHANGE_NAME, "com.df.qwqwwwww", new Message(JSON.toJSONString(systemTask).getBytes(), getmessageProperties(1)));
             }
