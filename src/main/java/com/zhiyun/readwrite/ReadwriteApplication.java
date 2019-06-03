@@ -7,6 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 @Slf4j
 @MapperScan("com.zhiyun.readwrite.dao")
@@ -14,6 +17,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         DataSourceAutoConfiguration.class
 })
 @EnableRabbit
+@EnableWebSocket
 public class ReadwriteApplication {
 
     public static void main(String[] args) {
