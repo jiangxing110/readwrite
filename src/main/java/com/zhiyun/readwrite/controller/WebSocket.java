@@ -1,174 +1,279 @@
-package com.zhiyun.readwrite.controller;/**
+package com.zhiyun.readwrite.controller;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+
+import javax.websocket.*;
+import javax.websocket.server.ServerEndpoint;
+
+
+import cn.hutool.core.util.StrUtil;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.zhiyun.readwrite.entity.User;
+import org.springframework.stereotype.Component;
+import sun.security.x509.AlgorithmId;
+
+/**
  * @Title: WebSocketServer
  * @ProjectName: readwrite
  * @Description: TODO
  * @author: jiangxing
  * @date 2019/6/315:34
  */
-import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.websocket.*;
-import javax.websocket.server.PathParam;
-import javax.websocket.server.ServerEndpoint;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-/**
- * @Classname WebSocketServer
- * @Description TODO
- * @Date 2019/6/3 15:34
- * @Created by jiangxing
- */
+@ServerEndpoint(value = "/websocket")
 @Component
-@ServerEndpoint("/websocket/{username}")
 public class WebSocket{
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     /**
-     * 在线人数
+     * 静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
      */
-    public static int onlineNumber = 0;
+    private static int onlineCount = 0;
+
     /**
-     * 以用户的姓名为key，WebSocket为对象保存起来
-     */
-    private static Map<String, WebSocket> clients = new ConcurrentHashMap<String, WebSocket>();
-    /**
-     * 会话
+     *与某个客户端的连接会话，需要通过它来给客户端发送数据
      */
     private Session session;
     /**
-     * 用户名称
-     */
-    private String username;
+     * 用以记录用户和房间号的对应关系(sessionId,room)
+    * */
+
+    private static HashMap<String,String> RoomForUser = new HashMap<String,String>();
+    public static final HashMap<String, CopyOnWriteArraySet<User>> UserForRoom = new HashMap<>() ;
     /**
-     * 建立连接
+     * 用以记录房间和其中用户群的对应关系(room,List<用户>)
+     */
+    public static HashMap<String,String> PwdForRoom = new HashMap<String,String>();
+    /**
+     * 用来存放必应壁纸
+     */
+    public static List<String> BingImages = new ArrayList<>();
+
+    private Gson gson = new Gson();
+
+    private Random random = new Random();
+
+    /**
+     * 连接建立成功调用的方法
      *
      * @param session
      */
     @OnOpen
-    public void onOpen(@PathParam("username") String username, Session session)
-    {
-        onlineNumber++;
-        logger.info("现在来连接的客户id："+session.getId()+"用户名："+username);
-        this.username = username;
+    public void onOpen(Session session) throws IOException {
         this.session = session;
-        logger.info("有新连接加入！ 当前在线人数" + onlineNumber);
-        try {
-            //messageType 1代表上线 2代表下线 3代表在线名单 4代表普通消息
-            //先给所有人发送通知，说我上线了
-            Map<String,Object> map1 = Maps.newHashMap();
-            map1.put("messageType",1);
-            map1.put("username",username);
-            sendMessageAll(JSON.toJSONString(map1),username);
-
-            //把自己的信息加入到map当中去
-            clients.put(username, this);
-            //给自己发一条消息：告诉自己现在都有谁在线
-            Map<String,Object> map2 = Maps.newHashMap();
-            map2.put("messageType",3);
-            //移除掉自己
-            Set<String> set = clients.keySet();
-            map2.put("onlineUsers",set);
-            sendMessageTo(JSON.toJSONString(map2),username);
-        }
-        catch (IOException e){
-            logger.info(username+"上线的时候通知所有人发生了错误");
-        }
-
-
-
+        addOnlineCount();
+        Map<String, String> result = new HashMap<>();
+        result.put("type", "bing");
+        result.put("msg", BingImages.get(random.nextInt(BingImages.size())));
+        result.put("sendUser", "系统消息");
+        result.put("id", session.getId());
+        this.sendMessage(gson.toJson(result));
     }
 
-    @OnError
-    public void onError(Session session, Throwable error) {
-        logger.info("服务端发生了错误"+error.getMessage());
-        //error.printStackTrace();
-    }
     /**
-     * 连接关闭
+     * 连接关闭调用的方法
      */
     @OnClose
-    public void onClose()
-    {
-        onlineNumber--;
-        //webSockets.remove(this);
-        clients.remove(username);
-        try {
-            //messageType 1代表上线 2代表下线 3代表在线名单  4代表普通消息
-            Map<String,Object> map1 = Maps.newHashMap();
-            map1.put("messageType",2);
-            map1.put("onlineUsers",clients.keySet());
-            map1.put("username",username);
-            sendMessageAll(JSON.toJSONString(map1),username);
+    public void onClose() {
+        subOnlineCount();
+        CopyOnWriteArraySet<User> users = getUsers(session);
+        if (users != null) {
+            String nick = "某人";
+            for (User user : users) {
+                if (user.getId().equals(session.getId())) {
+                    nick = user.getNickname();
+                }
+            }
+            Map<String, String> result = new HashMap<>();
+            result.put("type", "init");
+            result.put("msg", nick + "离开房间");
+            result.put("sendUser", "系统消息");
+            sendMessagesOther(users, gson.toJson(result));
+            User closeUser = getUser(session);
+            users.remove(closeUser);
+            if (users.size() == 0) {
+                String room = RoomForUser.get(session.getId());
+                UserForRoom.remove(room);
+                PwdForRoom.remove(room);
+            }
+            RoomForUser.remove(session.getId());
         }
-        catch (IOException e){
-            logger.info(username+"下线的时候通知所有人发生了错误");
-        }
-        logger.info("有连接关闭！ 当前在线人数" + onlineNumber);
     }
 
     /**
-     * 收到客户端的消息
+     * 收到客户端消息后调用的方法
      *
-     * @param message 消息
-     * @param session 会话
+     * @param message 消息内容
+     * @param session
      */
     @OnMessage
-    public void onMessage(String message, Session session)
-    {
-        try {
-            logger.info("来自客户端消息：" + message+"客户端的id是："+session.getId());
-            JSONObject jsonObject = JSON.parseObject(message);
-            String textMessage = jsonObject.getString("message");
-            String fromusername = jsonObject.getString("username");
-            String tousername = jsonObject.getString("to");
-            //如果不是发给所有，那么就发给某一个人
-            //messageType 1代表上线 2代表下线 3代表在线名单  4代表普通消息
-            Map<String,Object> map1 = Maps.newHashMap();
-            map1.put("messageType",4);
-            map1.put("textMessage",textMessage);
-            map1.put("fromusername",fromusername);
-            if(tousername.equals("All")){
-                map1.put("tousername","所有人");
-                sendMessageAll(JSON.toJSONString(map1),fromusername);
-            }
-            else{
-                map1.put("tousername",tousername);
-                sendMessageTo(JSON.toJSONString(map1),tousername);
-            }
-        }
-        catch (Exception e){
-            logger.info("发生了错误了");
-        }
-
-    }
-
-
-    public void sendMessageTo(String message, String ToUserName) throws IOException {
-        for (WebSocket item : clients.values()) {
-            if (item.username.equals(ToUserName) ) {
-                item.session.getAsyncRemote().sendText(message);
+    public void onMessage(String message, Session session) {
+        Map<String, String> map = new Gson().fromJson(message, new TypeToken<HashMap<String, String>>() {
+        }.getType());
+        Map<String, String> result = new HashMap<>();
+        User user = null;
+        String shiels = map.containsKey("shiels") ? map.get("shiels").toString() : null;
+        switch (map.get("type")) {
+            case "msg":
+                user = getUser(session);
+                result.put("type", "msg");
+                result.put("msg", map.get("msg"));
+                result.put("sendUser", user.getNickname());
+                result.put("shake", map.get("shake"));
                 break;
+            case "init":
+                String room = map.get("room");
+                String nick = map.get("nick");
+                String pwd = map.get("pwd");
+                if (room != null && nick != null) {
+                    user = new User(session.getId(), nick, this);
+                    //如果房间不存在，新建房间
+                    if (UserForRoom.get(room) == null) {
+                        CopyOnWriteArraySet<User> roomUsers = new CopyOnWriteArraySet<>();
+                        roomUsers.add(user);
+                        UserForRoom.put(room, roomUsers);
+                        if (StrUtil.isNotEmpty(pwd)) {
+                            PwdForRoom.put(room, pwd);
+                        }
+                        RoomForUser.put(session.getId(), room);
+                    } else {
+                        UserForRoom.get(room).add(user);
+                        RoomForUser.put(session.getId(), room);
+                    }
+                    result.put("type", "init");
+                    result.put("msg", nick + "成功加入房间");
+                    result.put("sendUser", "系统消息");
+                }
+                break;
+            case "img":
+                user = getUser(session);
+                result.put("type", "img");
+                result.put("msg", map.get("msg"));
+                result.put("sendUser", user.getNickname());
+                break;
+        }
+        if (StrUtil.isEmpty(shiels)) {
+            sendMessagesOther(getUsers(session), gson.toJson(result));
+        } else {
+            sendMessagesOther(getUsers(session), gson.toJson(result), shiels);
+        }
+    }
+
+    /**
+     * 连接发生错误时的调用方法
+     *
+     * @param session
+     * @param error
+     */
+    @OnError
+    public void onError(Session session, Throwable error) {
+        System.out.println("发生错误");
+        error.printStackTrace();
+    }
+
+
+    public void sendMessage(String message) throws IOException {
+        this.session.getBasicRemote().sendText(message);
+    }
+
+
+    /**
+     * 获得在线人数
+     *
+     * @return
+     */
+    public static synchronized int getOnlineCount() {
+        return onlineCount;
+    }
+
+    public static synchronized void addOnlineCount() {
+        WebSocket.onlineCount++;
+    }
+
+    public static synchronized void subOnlineCount() {
+        WebSocket.onlineCount--;
+    }
+
+
+    /**
+     * 根据当前用户的session获得他所在房间的所有用户
+     *
+     * @param session
+     * @return
+     */
+    private CopyOnWriteArraySet<User> getUsers(Session session) {
+        String room = RoomForUser.get(session.getId());
+        CopyOnWriteArraySet<User> users = UserForRoom.get(room);
+        return users;
+    }
+
+    private User getUser(Session session) {
+        String room = RoomForUser.get(session.getId());
+        CopyOnWriteArraySet<User> users = UserForRoom.get(room);
+        for (User user : users) {
+            if (session.getId().equals(user.getId())) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 给某个房间的所有人发送消息
+     *
+     * @param users
+     * @param message
+     */
+    private void sendMessagesAll(CopyOnWriteArraySet<User> users, String message) {
+        //群发消息
+        for (User item : users) {
+            try {
+                item.getWebSocket().sendMessage(message);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    public void sendMessageAll(String message,String FromUserName) throws IOException {
-        for (WebSocket item : clients.values()) {
-            item.session.getAsyncRemote().sendText(message);
+    /**
+     * 给某个房间除自己外发送消息
+     *
+     * @param users
+     * @param message
+     */
+    private void sendMessagesOther(CopyOnWriteArraySet<User> users, String message) {
+        //群发消息
+        for (User item : users) {
+            if (item.getWebSocket() != this) {
+                try {
+                    item.getWebSocket().sendMessage(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
-    public static synchronized int getOnlineCount() {
-        return onlineNumber;
+    /**
+     * 给某个房间除自己外发送消息
+     *
+     * @param users
+     * @param message
+     */
+    private void sendMessagesOther(CopyOnWriteArraySet<User> users, String message, String shiel) {
+        List<String> shiels = Arrays.asList(shiel.split(","));
+        //群发消息
+        for (User item : users) {
+            if (item.getWebSocket() != this && !shiels.contains(item.getId())) {
+                try {
+                    item.getWebSocket().sendMessage(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
-
-
 
 }

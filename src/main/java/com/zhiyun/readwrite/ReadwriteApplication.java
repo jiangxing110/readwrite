@@ -8,8 +8,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
+
+import java.net.UnknownHostException;
 
 @Slf4j
 @MapperScan("com.zhiyun.readwrite.dao")
@@ -18,9 +21,10 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 })
 @EnableRabbit
 @EnableWebSocket
+
 public class ReadwriteApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException {
         ConfigurableApplicationContext run = SpringApplication.run(ReadwriteApplication.class, args);
         String serverport = run.getEnvironment().getProperty("server.port");
         String serverName = run.getEnvironment().getProperty("server.servlet.context-path");
