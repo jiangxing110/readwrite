@@ -41,8 +41,6 @@ public class RedisConfig {
     @ConfigurationProperties(prefix = "spring.redis")
     public static RedisTemplate<String, Object> initRedis(Integer indexDb, RedisTemplate<String, Object> redisTemplate) {
         JedisConnectionFactory redisConnectionFactory = new JedisConnectionFactory();
-        redisConnectionFactory.setHostName("127.0.0.1");
-        redisConnectionFactory.setPort(6379);
         redisConnectionFactory.setDatabase(indexDb);
         redisConnectionFactory.afterPropertiesSet();
         redisTemplate.setConnectionFactory(redisConnectionFactory);

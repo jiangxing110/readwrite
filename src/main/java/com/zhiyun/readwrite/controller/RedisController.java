@@ -1,6 +1,7 @@
 package com.zhiyun.readwrite.controller;
 
 
+import com.zhiyun.readwrite.config.RedisConfig;
 import com.zhiyun.readwrite.entity.Goods;
 import com.zhiyun.readwrite.service.GoodsService;
 
@@ -41,13 +42,18 @@ public class RedisController {
     @ApiOperation(value = "查询全部--只读数据库")
     public List<Goods> goods() {
         //查询缓存
+        redisTemplate = RedisConfig.initRedis(1,redisTemplate);
         List<Goods> studentList= (List<Goods>)redisTemplate.opsForValue().get("allStudents");
         if(null == studentList) {
             //缓存为空，查询一遍数据库
             List<Goods> goods=goodsService.list();
             //把数据库查询出来数据，放入Redis中
             redisTemplate.opsForValue().set("goods",goods);
+
         }
+        redisTemplate = RedisConfig.initRedis(9,redisTemplate);
+        String a=(String) redisTemplate.opsForValue().get("aCarStatus");
+        log.error(a);
         return studentList;
     }
 }
