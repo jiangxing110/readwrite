@@ -25,7 +25,7 @@ public class QuartzService {
     /**
      * 定期删除聊天图片
      */
-    //@Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0 0/1 * * * ?")
     public void timerToNow(){
         log.debug("开始查询需要删除的图片。。。。。。。。。。");
         Map<Long,String> img = WebSocketController.img;
