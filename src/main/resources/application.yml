@@ -32,6 +32,18 @@ spring:
         acknowledge-mode: manual
       direct:
         acknowledge-mode: manual
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    max-idle: 20
+    max-total: 100
+    max-wait-millis: 3000
+    password:
+  data:
+    mongodb:
+      host: 127.0.0.1
+      database: test
+      port: 27017
 
 mybatis:
   mapperLocations: classpath:mapper/*.xml
