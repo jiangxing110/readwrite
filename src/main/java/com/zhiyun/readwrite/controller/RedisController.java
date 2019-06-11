@@ -52,7 +52,7 @@ public class RedisController {
 
         }
         redisTemplate = RedisConfig.initRedis(9,redisTemplate);
-        String a=(String) redisTemplate.opsForValue().get("aCarStatus");
+        String a=(String) redisTemplate.opsForValue().get("111aa");
         log.error(a);
         return studentList;
     }
