@@ -44,7 +44,8 @@ spring:
       host: 127.0.0.1
       database: test
       port: 27017
-
+  main:
+    allow-bean-definition-overriding: true #当遇到同样名字的时候，是否允许覆盖注册
 mybatis:
   mapperLocations: classpath:mapper/*.xml
   typeAliasesPackage: main.java.com.zhiyun.readwrite.dao
