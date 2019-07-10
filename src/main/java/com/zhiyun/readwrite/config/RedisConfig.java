@@ -29,8 +29,8 @@ public class RedisConfig {
      * @param factory redis连接 factory
      * @return redisTemplate
      */
-   @Bean(name = "redisTemplate")
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+
+   /* public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         template.setKeySerializer(new StringRedisSerializer());
@@ -39,7 +39,7 @@ public class RedisConfig {
         template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         template.afterPropertiesSet();
         return template;
-    }
+    }*/
     @ConfigurationProperties(prefix = "spring.redis")
     public static RedisTemplate<String, Object> initRedis(Integer indexDb, RedisTemplate<String, Object> redisTemplate) {
         JedisConnectionFactory redisConnectionFactory = new JedisConnectionFactory();
@@ -48,13 +48,13 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         return redisTemplate;
     }
-
-   /* public RedisTemplate<String, String> getStringStringRedisTemplate(RedisConnectionFactory factory2) {
+    @Bean(name = "redisTemplate")
+  public RedisTemplate<String, String> getStringStringRedisTemplate(RedisConnectionFactory factory2) {
         StringRedisTemplate template = new StringRedisTemplate(factory2);
         template.setKeySerializer(RedisSerializer.string());
         template.setValueSerializer(RedisSerializer.string());
         template.setHashKeySerializer(RedisSerializer.string());
         template.setHashValueSerializer(RedisSerializer.string());
         return template;
-    }*/
+    }
 }

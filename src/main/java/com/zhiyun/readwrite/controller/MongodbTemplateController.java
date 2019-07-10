@@ -42,7 +42,7 @@ public class MongodbTemplateController {
     @RequestMapping(value = "/insert", method = RequestMethod.POST)
     public int insert( Goods goods) throws Exception {
         String a=null;
-        this.mongoTemplate.insert(goods);
+        this.mongoTemplate.insert(goods,collectionName);
         return HttpServletResponse.SC_OK;
     }
 
